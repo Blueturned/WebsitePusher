@@ -1,7 +1,7 @@
 New-Module -Name Config -ScriptBlock  {
     function ChangeConfigEntry {
         param (
-            $config
+            $config,
             $entry,
             $msg
         )
@@ -23,6 +23,7 @@ New-Module -Name Config -ScriptBlock  {
             Write-Warning "Error occured writing to CustomConfig.json: $_"
             return $false
         }
+        return $true 
     }
 
     function Initialize { 
@@ -51,6 +52,7 @@ New-Module -Name Config -ScriptBlock  {
         }
 
         $success = SaveConfig -config $config
+        
         if (!$success) { return $false }
         Write-Host "Config succesful" -ForegroundColor Green
         return $true
@@ -60,7 +62,7 @@ New-Module -Name Config -ScriptBlock  {
         $config = Get-Content -Raw "CustomConfig.json" | ConvertFrom-Json
         $running = $true
         while ($running) {
-            cls
+            Clear-Host
             Write-Host "Pick one of the following options:"
             Write-Host "0) Exit config"
             Write-Host "1) Change host name"
@@ -96,6 +98,7 @@ New-Module -Name Config -ScriptBlock  {
             }
         }
         SaveConfig -config $config
+        return
     }
 
     Export-ModuleMember -Function EditConfig

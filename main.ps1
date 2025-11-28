@@ -11,13 +11,13 @@ if ($userInput -eq "y" -or $userInput -eq "yes") {
     EditConfig
 }
 
-#$ftpServer = "192.168.2.69"
+$userConfig = Get-Content -Raw "CustomConfig.json" | ConvertFrom-Json
 
-#$cred = Get-Credential
-#$sessionOption = New-WinSCPSessionOption -HostName $ftpServer -Protocol ftp -Credential $cred
+$cred = Get-Credential
+$sessionOption = New-WinSCPSessionOption -HostName $userConfig.HostName -Protocol ftp -Credential $cred
 
-#New-WinSCPSession -SessionOption $sessionOption
+New-WinSCPSession -SessionOption $sessionOption
 
-#New-WinSCPItem -Path '/home/blueturned/Documents/test' -ItemType Directory
+New-WinSCPItem -Path $userConfig.DestinationDirectory -ItemType Directory
 
-#Remove-WinSCPSession
+Remove-WinSCPSession
