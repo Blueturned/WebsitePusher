@@ -1,17 +1,23 @@
-$config = & .\config.ps1
+Import-Module ".\config.psm1"
 
-if (-not $config.ModuleSucces) {
-    Write-Error "Config failed, exiting script"
+$config = Initialize
+if ($config -eq $false) {
+    Write-Error "initialization failed, exiting script"
     exit 1
 }
 
-$ftpServer = "192.168.2.69"
+$userInput = Read-Host -Prompt "Would you like to run the config? [y/n]"
+if ($userInput -eq "y" -or $userInput -eq "yes") {
+    EditConfig
+}
 
-$cred = Get-Credential
-$sessionOption = New-WinSCPSessionOption -HostName $ftpServer -Protocol ftp -Credential $cred
+#$ftpServer = "192.168.2.69"
 
-New-WinSCPSession -SessionOption $sessionOption
+#$cred = Get-Credential
+#$sessionOption = New-WinSCPSessionOption -HostName $ftpServer -Protocol ftp -Credential $cred
 
-New-WinSCPItem -Path '/home/blueturned/Documents/test' -ItemType Directory
+#New-WinSCPSession -SessionOption $sessionOption
 
-Remove-WinSCPSession
+#New-WinSCPItem -Path '/home/blueturned/Documents/test' -ItemType Directory
+
+#Remove-WinSCPSession
