@@ -5,10 +5,17 @@ New-Module -Name Config -ScriptBlock  {
             $entry,
             $msg
         )
-        $msg = if ($msg) { $msg} else {"$entry selected to be changed"}
-        Write-Host $msg
-        $customEntry = Read-Host -Prompt "Please input the $entry"
-        $config[$entry] = $customEntry
+        try {
+            $msg = if ($msg) { $msg } else {"$entry selected to be changed"}
+            Write-Host $msg
+            $customEntry = Read-Host -Prompt "Please input the $entry"
+            $config.$entry = $customEntry
+            Write-Host "$entry edited successfully"
+        }
+        catch {
+            Write-Warning "Failed to edit the $entry : $_"
+        }
+        Start-Sleep -Seconds 1
     }
     
     function SaveConfig {
@@ -18,6 +25,7 @@ New-Module -Name Config -ScriptBlock  {
         try {
             $config = ConvertTo-Json $config
             Set-Content -Value $config -Path "CustomConfig.json"
+            Write-Host "Sucesfully saved the config"
         }
         catch {
             Write-Warning "Error occured writing to CustomConfig.json: $_"
@@ -69,10 +77,12 @@ New-Module -Name Config -ScriptBlock  {
             Write-Host "2) Change default pushdirectory"
             Write-Host "3) Change default ignore directory"
             Write-Host "4) Change destination directory"
+            Write-Host "5) Change back-up directory"
             $userInput = Read-Host "Pick your option"
             switch ($userInput) {
                 0 {
                     Write-Host "Exiting config..."
+                    SaveConfig -config $config
                     return
                     break
                 }
@@ -92,13 +102,15 @@ New-Module -Name Config -ScriptBlock  {
                     ChangeConfigEntry -config $config -entry "DestinationDirectory"
                     break
                 }
+                5 {
+                    ChangeConfigEntry -config $config -entry "BackUpDirectory"
+                    break
+                }
                 Default {
                     "No valid input detected."
                 }
             }
         }
-        SaveConfig -config $config
-        return
     }
 
     Export-ModuleMember -Function EditConfig
