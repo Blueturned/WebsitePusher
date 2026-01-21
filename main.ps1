@@ -4,48 +4,50 @@
 # V0.2
 #=========================================================================================
 
-Import-Module ".\config.psm1"
+Import-Module ".\config.psm1" #Import the config module
 
-$config = Initialize
-if ($config -eq $false) {
+$config = Initialize #Running the config initialization
+if ($config -eq $false) { #Quits script if config fails
     Write-Error "initialization failed, exiting script"
     exit 1
 }
 
 $userInput = Read-Host -Prompt "Would you like to run the config? [y/n]"
 if ($userInput -eq "y" -or $userInput -eq "yes") {
-    EditConfig
+    EditConfig #opens the config editor in the config.psm1 module
 }
 
-$userConfig = Get-Content -Raw "CustomConfig.json" | ConvertFrom-Json
+$userConfig = Get-Content -Raw "CustomConfig.json" | ConvertFrom-Json #Reads the data from the json file
 
-$cred = Get-Credential
-$sessionOption
+$cred = Get-Credential #Gets the username and password for the server
 
 $sessionType = Read-Host -Prompt "Would you like to use: 1) SFTP 2) FTP? (Defaults to FTP)"
-if ($sessionType -ne "1" -or $sessionType -ne "SFTP" -or $sessionType -ne "sftp") {
-    $sessionOption = New-WinSCPSessionOption -HostName $userConfig.HostName -Protocol Sftp -Credential $cred
-else {
-    $sessionOption = New-WinSCPSessionOption -HostName $userConfig.HostName -Protocol ftp -Credential $cred
-    }
+if ($sessionType -eq "1" -or $sessionType -eq "SFTP" -or $sessionType -eq "sftp") {
+    $sessionOption = New-WinSCPSessionOption -HostName $userConfig.HostName -Protocol Sftp -Credential $cred -SshHostKeyFingerprint "ssh-ed25519 255 IGwcV+vWUNpu4CTFrU8uMHnH2quLJv4wYx6ltB+mZB8" #Opens the session in SFTP, using the sshhostkeyfingerprint
 }
-
-New-WinSCPSession -SessionOption $sessionOption
+else {
+    $sessionOption = New-WinSCPSessionOption -HostName $userConfig.HostName -Protocol ftp -Credential $cred #Opens the session in FTP mode
+}
 
 try {
-    Write-Host "Creating back-up... "
-    $backUp = Get-WinSCPItem -Path $userConfig.DestinationDirectory
-    Write-Host "Done!" -NoNewline
-    Write-Host "Copying files to back-up folder... "
+    Write-Host "Creating back-up... " -NoNewline
 
-    Write-Host "Done!" -NoNewline
+    New-WinSCPSession -SessionOption $sessionOption | Out-Null #Opens the session
+
+    Receive-WinSCPItem  -RemotePath $userConfig.DestinationDirectory -LocalPath $userConfig.BackUpDirectory -ErrorAction Stop #Gets files from the remote directory
+    
+    Write-Host "Done!"
+    Write-Host "Pushing new files to the server... " -NoNewline
+    
+    Send-WinSCPItem -RemotePath $userConfig.DestinationDirectory -LocalPath $userConfig.PushDirectory -ErrorAction Stop #Uploads files from the local directory to the remote directory
+
+    Write-Host "Done!"
 }
 catch {
-    Write-Warning "Failed to create a back-up: $_, exiting script."
+    Write-Warning "Failed to create a back-up and/or pushing files: $_, exiting script."
     exit 1
 }
+finally {
+    Remove-WinSCPSession
+}
 
-
-New-WinSCPItem -Path $userConfig.DestinationDirectory -ItemType Directory
-
-Remove-WinSCPSession

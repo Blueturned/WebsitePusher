@@ -1,5 +1,5 @@
 {
-  "HostName": "192.168.2.69",
+  "HostName": "10.244.26.95",
   "PushDirectory": "FilesToPush",
   "IgnoreDirectory": "FilesToIgnore",
   "DestinationDirectory": "/home/blueturned/Documents/test",
